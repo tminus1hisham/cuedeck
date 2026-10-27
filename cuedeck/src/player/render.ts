@@ -153,7 +153,7 @@ export function mountPlayer(host: HTMLElement, show: Show, opts: PlayerOpts) {
     const c = item.card ?? { template: 'welcome', title: item.label };
     const wrap = el('div', `cd-card cd-t-${c.template}`);
     if (show.brand.logo) { const img = el('img', 'cd-logo'); img.src = opts.url(show.brand.logo); img.alt = ''; wrap.append(img); }
-    const kicker = { welcome: 'Welcome to', speaker: 'Please welcome', break: 'We are on a break', thanks: '' }[c.template];
+    const kicker = { welcome: 'Welcome to', speaker: 'Please welcome', break: 'We are on a break', thanks: '', plain: '' }[c.template];
     if (kicker) wrap.append(el('p', 'cd-kicker', kicker));
     wrap.append(el('h1', 'cd-title', c.title || item.label));
     if (c.subtitle) wrap.append(el('p', 'cd-sub', c.subtitle));

@@ -3,28 +3,13 @@ import { unzipSync } from 'fflate';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { twoPagePdf } from './fixtures';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const DAMA = join(here, '..', '..');
 const deck = join(DAMA, 'DAMA Kenya Launch Event Deck.html');
 const video = join(DAMA, 'DAMA_Kenya_Launch_SunoSong_Merged.mp4');
 const scratch = join(here, '..', '.e2e');
-
-/** Smallest valid two-page PDF, so the test needs no fixture file. */
-function twoPagePdf() {
-  const objs = [
-    '<< /Type /Catalog /Pages 2 0 R >>',
-    '<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>',
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 320 180] >>',
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 320 180] >>',
-  ];
-  let out = '%PDF-1.4\n';
-  const offsets = objs.map((o, i) => { const at = out.length; out += `${i + 1} 0 obj\n${o}\nendobj\n`; return at; });
-  const xref = out.length;
-  out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n${offsets.map(o => `${String(o).padStart(10, '0')} 00000 n \n`).join('')}`;
-  out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
-  return Buffer.from(out, 'latin1');
-}
 
 const csv = Buffer.from('Item,Amount\nVenue,"120,000"\nSound,45000\n');
 

@@ -14,6 +14,7 @@ export const CARDS: Record<CardTemplate, { name: string; title: string; subtitle
   speaker: { name: 'Speaker intro', title: 'Speaker name', subtitle: 'Role, organisation' },
   break: { name: 'Break', title: 'Break', subtitle: 'We resume at 11:30' },
   thanks: { name: 'Thank you', title: 'Thank you' },
+  plain: { name: 'Title only', title: 'Title' },
 };
 
 export const cardItem = (template: CardTemplate): Item => {

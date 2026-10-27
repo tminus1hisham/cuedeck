@@ -1,6 +1,6 @@
 export type Kind = 'image' | 'pdf' | 'video' | 'audio' | 'sheet' | 'html' | 'card';
 
-export type CardTemplate = 'welcome' | 'speaker' | 'break' | 'thanks';
+export type CardTemplate = 'welcome' | 'speaker' | 'break' | 'thanks' | 'plain';
 
 export interface Item {
   id: string;
@@ -54,4 +54,27 @@ export interface State {
 
 export type Command =
   | { cmd: 'next' | 'prev' | 'media' | 'restart' | 'blackout' | 'skip' | 'hello' }
-  | { cmd: 'go'; i: number };
+  | { cmd: 'go'; i: number }
+  /** Presenter → stage, same laptop only: open the relay for phones and the audience. */
+  | { cmd: 'relay'; room: string; key: string };
+
+/** What the phone remote needs to know about the show. Never sent to the audience. */
+export interface Summary {
+  type: 'summary';
+  title: string;
+  cues: { label: string; speaker?: string; notes?: string; duration?: number; kind: Kind }[];
+  /** Cue number (1-based) of each slide. */
+  slideCues: number[];
+}
+
+/** The slide on screen, self-contained, for phones and the audience. Holds no notes and nothing ahead. */
+export interface Snap {
+  type: 'snap';
+  index: number;
+  blackout: boolean;
+  show: Show;
+  urls: Record<string, string>;
+}
+
+/** Relay → stage and phones. */
+export interface Presence { type: 'presence'; remotes: number; audience: number; online?: boolean }

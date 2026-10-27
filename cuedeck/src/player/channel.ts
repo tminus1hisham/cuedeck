@@ -1,6 +1,6 @@
-import type { Command, State } from './types';
+import type { Command, Presence, State } from './types';
 
-export type Msg = Command | State;
+export type Msg = Command | State | Presence;
 
 /**
  * Same-laptop link between stage and presenter windows. Works from a local folder too,

@@ -11,6 +11,7 @@ const TEMPLATE = `
   <h1 class="rm-show"></h1>
   <p class="rm-conn"><i></i><span>Waiting for the stage window</span></p>
   <p class="rm-drift" hidden></p>
+  <span class="rm-share"></span>
   <p class="rm-clock" title="Time since the first cue change">0:00</p>
   <button class="rm-btn" data-act="reset">Reset clock</button>
   <button class="rm-btn" data-act="open">Open stage window</button>
@@ -62,7 +63,7 @@ export function mountRemote(root: HTMLElement, show: Show, opts: PlayerOpts & { 
 
   const send = (c: Command) => link.send(c);
   const link = connect(show.id, m => {
-    if (!('type' in m)) return;
+    if (!('type' in m) || m.type !== 'state') return;
     if (st && m.index !== st.index && !t0) t0 = Date.now();
     st = m;
     lastSeen = Date.now();
@@ -142,7 +143,7 @@ export function mountRemote(root: HTMLElement, show: Show, opts: PlayerOpts & { 
     const d = $('.rm-drift');
     d.hidden = !planned || !t0 || cue < 0;
     if (!d.hidden) {
-      const min = Math.round(drift(show, cue, elapsed / 60, (Date.now() - cueT0) / 60000));
+      const min = Math.round(drift(show.items, cue, elapsed / 60, (Date.now() - cueT0) / 60000));
       d.textContent = min === 0 ? 'On time' : min > 0 ? `${min} min behind` : `${-min} min ahead`;
       d.dataset.level = min >= 5 ? 'late' : min > 0 ? 'slip' : 'ok';
     }

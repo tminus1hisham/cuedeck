@@ -9,12 +9,15 @@
     "build:offline": "vite build -c vite.offline.config.ts",
     "predev": "npm run build:offline",
     "dev": "vite",
-    "build": "npm run build:offline && tsc --noEmit && vite build",
+    "build": "npm run build:offline && tsc --noEmit && tsc -p tsconfig.worker.json && vite build",
+    "deploy": "npm run build && wrangler deploy",
     "preview": "vite preview",
     "test": "vitest run src",
     "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.65.0",
+    "@cloudflare/workers-types": "^5.20261027.1",
     "@playwright/test": "^1.64.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -22,13 +25,15 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.5",
     "vite-plugin-singlefile": "^2.3.4",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "wrangler": "^4.153.0"
   },
   "dependencies": {
     "fflate": "^0.8.3",
     "pdfjs-dist": "^6.4.299",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "read-excel-file": "^9.3.12"
+    "read-excel-file": "^9.3.12",
+    "uqr": "^0.1.3"
   }
 }
