@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DAMA Deck Remote</title>
+<style>
+  :root { --bg:#0b1020; --panel:#131a2e; --line:#243052; --ink:#e8edf8; --mute:#8a96b5; --blue:#2563EB; --ok:#22c55e; --warn:#f59e0b; }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--ink); font:16px/1.4 Inter, "Segoe UI", system-ui, sans-serif; min-height:100vh; padding:20px; display:grid; gap:16px; grid-template-rows:auto auto 1fr auto; }
+  button { font:inherit; color:inherit; border:0; cursor:pointer; }
+  button:disabled { opacity:.4; cursor:default; }
+  header { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  header h1 { font-size:18px; font-weight:600; margin-right:auto; }
+  .status { display:flex; align-items:center; gap:8px; color:var(--mute); font-size:14px; }
+  .status i { width:10px; height:10px; border-radius:50%; background:var(--warn); }
+  .on .status i { background:var(--ok); }
+  .timer { font-variant-numeric:tabular-nums; font-size:22px; font-weight:600; background:var(--panel); padding:6px 12px; border-radius:10px; }
+  .btn { background:var(--panel); border:1px solid var(--line); padding:8px 14px; border-radius:10px; }
+  .btn:not(:disabled):hover { border-color:var(--blue); }
+  .setup { background:#2a1f05; border:1px solid #5c4410; color:#fde68a; border-radius:12px; padding:14px 18px; }
+  .setup ol { margin:6px 0 0 20px; }
+  .on .setup { display:none; }
+  main { display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,300px); gap:16px; min-height:0; }
+  .stage { display:flex; flex-direction:column; gap:16px; }
+  .top { display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:16px; }
+  .screen { position:relative; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden; border:1px solid var(--line); }
+  .screen iframe { position:absolute; inset:0; width:100%; height:100%; border:0; pointer-events:none; }
+  .screen .tag { position:absolute; top:8px; left:8px; z-index:1; font-size:11px; letter-spacing:.08em; text-transform:uppercase; background:rgba(11,16,32,.75); padding:3px 8px; border-radius:6px; display:flex; align-items:center; gap:6px; }
+  .screen .tag::before { content:""; width:7px; height:7px; border-radius:50%; background:#ef4444; }
+  .now { background:var(--panel); border-radius:16px; padding:20px; display:flex; flex-direction:column; justify-content:center; }
+  .now small { color:var(--mute); text-transform:uppercase; letter-spacing:.08em; font-size:12px; }
+  .now h2 { font-size:clamp(24px,3vw,40px); line-height:1.1; margin:6px 0 12px; }
+  .now p { color:var(--mute); }
+  .now p b { color:var(--ink); font-weight:600; }
+  .media { display:flex; background:var(--panel); border-radius:16px; padding:14px 18px; gap:14px; align-items:center; flex-wrap:wrap; }
+  .media .kind { font-size:14px; color:var(--mute); min-width:150px; }
+  .media .kind b { color:var(--ink); }
+  .media .play { background:var(--blue); border-color:var(--blue); font-weight:600; min-width:130px; }
+  .media .bar { flex:1 1 160px; height:6px; background:var(--line); border-radius:3px; overflow:hidden; }
+  .media .bar span { display:block; height:100%; width:0; background:var(--blue); }
+  .media .t { font-variant-numeric:tabular-nums; color:var(--mute); }
+  .media .blocked { flex-basis:100%; color:var(--warn); font-size:14px; display:none; }
+  .media.blk .blocked { display:block; }
+  .nav { display:grid; grid-template-columns:1fr 2fr; gap:16px; }
+  .nav button { border-radius:16px; padding:24px; font-size:24px; font-weight:600; background:var(--panel); border:1px solid var(--line); }
+  .nav button.next { background:var(--blue); border-color:var(--blue); }
+  .nav button:active { transform:scale(.98); }
+  .list { background:var(--panel); border-radius:16px; padding:10px; overflow:auto; display:flex; flex-direction:column; gap:2px; max-height:calc(100vh - 150px); }
+  .list button { text-align:left; padding:8px 12px; border-radius:10px; background:none; display:flex; gap:12px; align-items:center; }
+  .list button:hover { background:#1b2440; }
+  .list button.cur { background:var(--blue); }
+  .list button span { color:var(--mute); font-variant-numeric:tabular-nums; min-width:2ch; }
+  .list button.cur span { color:#dbeafe; }
+  footer { color:var(--mute); font-size:13px; }
+  kbd { background:var(--panel); border:1px solid var(--line); border-radius:5px; padding:1px 6px; font:12px ui-monospace, monospace; color:var(--ink); }
+  @media (max-width:900px) { main, .top { grid-template-columns:1fr; } .list { max-height:none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>DAMA Kenya Deck Remote</h1>
+  <div class="status"><i></i><span id="conn">Waiting for deck…</span></div>
+  <div class="timer" id="timer" title="Time since first slide change">00:00</div>
+  <button class="btn" id="resetTimer">Reset timer</button>
+  <button class="btn" id="openDeck">Open deck window</button>
+</header>
+
+<div class="setup">
+  <b>Setup (keep this window on your laptop screen)</b>
+  <ol>
+    <li>Click <b>Open deck window</b>. You can also open <i>DAMA Kenya Launch Event Deck.html</i> yourself, but use the same browser as this remote.</li>
+    <li>Drag the deck window onto the extended screen / projector.</li>
+    <li>Click the full-screen button in the deck's top-right corner. That one click also lets the anthem and launch video play with sound.</li>
+    <li>Come back here. Your keyboard, clicker or mouse on this window now controls the deck.</li>
+  </ol>
+</div>
+
+<main>
+  <section class="stage">
+    <div class="top">
+      <div class="screen">
+        <span class="tag">Audience view</span>
+        <iframe id="preview" title="Audience view" tabindex="-1"></iframe>
+      </div>
+      <div class="now">
+        <small>Now showing · <span id="pos">–</span></small>
+        <h2 id="curLabel">–</h2>
+        <p>Up next: <b id="nextLabel">–</b></p>
+      </div>
+    </div>
+    <div class="media" id="media">
+      <span class="kind" id="mKind">No audio or video on this slide</span>
+      <button class="btn play" id="mToggle" disabled>▶ Play</button>
+      <button class="btn" id="mRestart" disabled>↺ Restart</button>
+      <div class="bar"><span id="mBar"></span></div>
+      <span class="t" id="mTime">0:00 / 0:00</span>
+      <p class="blocked">The browser blocked playback. Click once anywhere on the deck window, then press Play here.</p>
+    </div>
+    <div class="nav">
+      <button id="prev">← Back</button>
+      <button id="next" class="next">Next →</button>
+    </div>
+  </section>
+  <nav class="list" id="list" aria-label="Slides"></nav>
+</main>
+
+<footer>
+  Keys: <kbd>→</kbd> <kbd>Space</kbd> <kbd>PgDn</kbd> next · <kbd>←</kbd> <kbd>PgUp</kbd> back · <kbd>Home</kbd>/<kbd>End</kbd> first/last · <kbd>P</kbd> play/pause audio or video. Presentation clickers work too.
+</footer>
+
+<script>
+(() => {
+  const DECK = 'DAMA Kenya Launch Event Deck.html';
+  const $ = id => document.getElementById(id);
+  const bc = new BroadcastChannel('dama-deck-remote');
+  let st = null, lastSeen = 0, t0 = 0, listKey = '';
+
+  const send = (cmd, extra) => bc.postMessage(Object.assign({ cmd }, extra));
+  const fmt = s => { s = Math.floor(s || 0); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
+  // Muted copy of the deck that follows the real one (see the deck's remote-preview mode).
+  $('preview').src = encodeURI(DECK) + '?remote-preview';
+
+  bc.onmessage = ({ data: m }) => {
+    if (m.type !== 'state') return;
+    if (st && m.index !== st.index && !t0) t0 = Date.now();
+    st = m; lastSeen = Date.now(); render();
+  };
+
+  function render() {
+    document.body.classList.add('on');
+    $('conn').textContent = 'Deck connected';
+    const n = st.labels.length;
+    $('pos').textContent = (st.index + 1) + ' of ' + n;
+    $('curLabel').textContent = st.labels[st.index] || '–';
+    $('nextLabel').textContent = st.index + 1 < n ? st.labels[st.index + 1] : 'End of deck';
+
+    const key = st.labels.join('|');
+    if (key !== listKey) {
+      listKey = key;
+      $('list').replaceChildren(...st.labels.map((l, i) => {
+        const b = document.createElement('button');
+        b.innerHTML = '<span>' + (i + 1) + '</span>';
+        b.append(l);
+        b.onclick = () => send('go', { i });
+        return b;
+      }));
+    }
+    [...$('list').children].forEach((b, i) => b.classList.toggle('cur', i === st.index));
+    $('list').children[st.index]?.scrollIntoView({ block: 'nearest' });
+
+    const m = $('media'), has = !!st.media;
+    $('mKind').innerHTML = has ? 'This slide has <b>' + (st.media === 'video' ? 'video' : 'audio') + '</b>' : 'No audio or video on this slide';
+    $('mToggle').disabled = $('mRestart').disabled = !has;
+    $('mToggle').textContent = st.playing ? '❚❚ Pause' : '▶ Play';
+    if (st.blocked) m.classList.add('blk'); else if (st.playing || !has) m.classList.remove('blk');
+    $('mTime').textContent = fmt(st.time) + ' / ' + fmt(st.duration);
+    $('mBar').style.width = st.duration ? (100 * st.time / st.duration) + '%' : '0';
+  }
+
+  // Drop focus after a click so Space/Enter only ever mean "next", never "press that button again".
+  addEventListener('click', e => e.target.closest('button')?.blur());
+  $('next').onclick = () => send('next');
+  $('prev').onclick = () => send('prev');
+  $('mToggle').onclick = () => send('media');
+  $('mRestart').onclick = () => send('restart');
+  $('resetTimer').onclick = () => { t0 = Date.now(); };
+  $('openDeck').onclick = () => window.open(encodeURI(DECK), 'dama-deck', 'popup,width=1280,height=760');
+
+  addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key;
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(k)) send('next');
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) send('prev');
+    else if (k === 'Home') send('go', { i: 0 });
+    else if (k === 'End' && st) send('go', { i: st.labels.length - 1 });
+    else if (k === 'p' || k === 'P') send('media');
+    else return;
+    e.preventDefault();
+  });
+
+  // Ping until the deck answers; flag it if it goes quiet (closed or reloaded).
+  setInterval(() => {
+    send('hello');
+    if (lastSeen && Date.now() - lastSeen > 5000) {
+      document.body.classList.remove('on');
+      $('conn').textContent = 'Deck not responding';
+    }
+    $('timer').textContent = t0 ? fmt((Date.now() - t0) / 1000).padStart(5, '0') : '00:00';
+  }, 1000);
+  send('hello');
+})();
+</script>
+</body>
+</html>
