@@ -1,0 +1,34 @@
+{
+  "name": "cuedeck",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Drop in any file, arrange a running order, cue the show from your phone.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build:offline": "vite build -c vite.offline.config.ts",
+    "predev": "npm run build:offline",
+    "dev": "vite",
+    "build": "npm run build:offline && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run src",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vite-plugin-singlefile": "^2.3.4",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "pdfjs-dist": "^6.4.299",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "read-excel-file": "^9.3.12"
+  }
+}

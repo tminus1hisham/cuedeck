@@ -1,0 +1,7 @@
+node_modules
+dist
+public/offline.html
+.e2e
+.e2e-in
+test-results
+playwright-report
